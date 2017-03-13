@@ -74,17 +74,18 @@ for i in range(12):
                 new = new + data_list[i*20*18+k*18+j][1:]'''
     PM25.append(new)
 
+feature_num = 8
 PM25 = np.array(PM25)
 PM25 = PM25.astype(np.float)
 #print (PM25[0,480:960])
 train_data = []
 train_result = []
 for i in range(12):
-    temp2 = PM25[i].reshape((8,-1))
+    temp2 = PM25[i].reshape((feature_num,-1))
     #print (temp2[1])
     for j in range(471):
         temp1 = np.array([])
-        for k in range(8):
+        for k in range(feature_num):
             temp1 = np.concatenate((temp1,temp2[k][j:j+9]))
         train_result.append(temp2[2][j+9])
         train_data.append(temp1)
@@ -92,6 +93,10 @@ for i in range(12):
 train_data = np.array(train_data)
 train_result = np.array(train_result)
 train_data = np.concatenate((train_data, train_data[:, 9:27]**2),axis=1)
+train_data = np.concatenate((train_data, train_data[:,18:27]**3), axis=1)
+
+#train_data = train_data[450:,:]
+#train_result = train_result[450:]
 mean = train_data.mean(0)
 std = train_data.std(0)
 train_data = (train_data-mean)/std
@@ -102,7 +107,7 @@ w_pm25 = np.array([0.0]*(train_data.shape[1]))
 lr = 0.5
 b_lr = 0.0
 w_lr_pm25 = np.array([0.0]*(train_data.shape[1]))
-iteration = 5000
+iteration = 15000
 for i in range(iteration):
    # b_grad = 0.0;
    # w_grad_pm25 = np.array([0.0]*11)
@@ -164,7 +169,7 @@ for i in range(len(data_t)):
         #temp = np.append(temp,temp**2)
     if (i%18 == 17):
         temp = np.concatenate((temp,temp[9:27]**2))
-        print (temp.shape)
+        temp = np.concatenate((temp,temp[18:27]**3))
         result.append(b + np.dot(w_pm25,(temp-mean)/std))
         temp = np.array([])
 
