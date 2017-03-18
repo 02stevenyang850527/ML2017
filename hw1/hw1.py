@@ -1,14 +1,17 @@
 import pandas as pd
+import sys
 import numpy as np
 
 #----------------- read train.csv -------------------
-data = pd.read_csv('train.csv', encoding = 'big5')
+#data = pd.read_csv('train.csv', encoding = 'big5')
+data = pd.read_csv(sys.argv[1], encoding = 'big5')
 data[data == "NR"] = 0
 data_filter = data.iloc[:,2:]
 data_str = np.array(data_filter)
 
 #---------------- read test_X.csv -------------------
-data_t = pd.read_csv('test_X.csv',header=None)
+#data_t = pd.read_csv('test_X.csv',header=None)
+data_t = pd.read_csv(sys.argv[2],header=None)
 data_t[data_t == 'NR'] = 0
 data_t = np.array(data_t)
 #---------------- extract training data -------------
@@ -119,11 +122,11 @@ for i in range(iteration):
     # Update parameters
     b = b - lr/np.sqrt(b_lr)*b_grad
     w_pm25 = w_pm25 - lr/np.sqrt(w_lr_pm25)*w_grad_pm25
-    if (i%100 == 0):
-        print ('iteration: {}, Loss = {}'.format(i, np.sqrt(np.mean((train_result-b-np.dot(train_data,w_pm25.T))**2))))
+#    if (i%100 == 0):
+#        print ('iteration: {}, Loss = {}'.format(i, np.sqrt(np.mean((train_result-b-np.dot(train_data,w_pm25.T))**2))))
 
-print(b)
-print(w_pm25)
+#print(b)
+#print(w_pm25)
 
 #------------------- test ------------------------
 #test_feature = []
@@ -173,8 +176,8 @@ for i in range(len(data_t)):
         result.append(b + np.dot(w_pm25,(temp-mean)/std))
         temp = np.array([])
 
-print (result)
-of = open('submit.csv','w')
+#print (result)
+of = open(sys.argv[3],'w')
 out = 'id,value'
 for i in range(len(result)):
     out = out + '\n' + 'id_' + str(i) +',' + str(result[i])
