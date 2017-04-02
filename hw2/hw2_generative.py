@@ -27,11 +27,12 @@ u0 = model_0.mean(0)
 u1 = model_1.mean(0)
 sigma0 = (np.dot((model_0-u0).T,(model_0-u0)))/number_0
 sigma1 = (np.dot((model_1-u1).T,(model_1-u1)))/number_1
-#sigma = p0*sigma0 + p1*sigma1
+sigma = p0*sigma0 + p1*sigma1
 det0 = np.linalg.det(sigma0)
 det1 = np.linalg.det(sigma1)
-inv_sigma0 = np.linalg.pinv(sigma0)
-inv_sigma1 = np.linalg.pinv(sigma1)
+inv_sigma = np.linalg.pinv(sigma)
+#inv_sigma0 = np.linalg.pinv(sigma0)
+#inv_sigma1 = np.linalg.pinv(sigma1)
 
 #-------prediction---------
 '''counter = 0
@@ -60,8 +61,8 @@ prediction = np.array([0]*len(test_np))
 for i in range(len(test_np)):
     temp0 = test_np[i]-u0
     temp1 = test_np[i]-u1
-    numerator = p1*np.exp(-0.5*np.dot(np.dot(temp1[None,:],inv_sigma1),temp1[:,None]))
-    denominator = p0*np.exp(-0.5*np.dot(np.dot(temp0[None,:],inv_sigma0),temp0[:,None]))
+    numerator = p1*np.exp(-0.5*np.dot(np.dot(temp1[None,:],inv_sigma),temp1[:,None]))
+    denominator = p0*np.exp(-0.5*np.dot(np.dot(temp0[None,:],inv_sigma),temp0[:,None]))
     denominator += numerator
     if (numerator == 0):
         p = 0
