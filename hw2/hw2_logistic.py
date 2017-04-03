@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import sys
 
 def sigmoid(x):
     try:
@@ -8,8 +9,8 @@ def sigmoid(x):
         return 1.0
 
 #-------read data--------
-feature = pd.read_csv('X_train')
-raw_data = pd.read_csv('train.csv',header=None)
+feature = pd.read_csv(sys.argv[3])
+raw_data = pd.read_csv(sys.argv[1],header=None)
 feature_add = np.array(raw_data.iloc[:,4])
 feature_add = np.concatenate((feature_add.reshape(-1,1)**2,(feature_add.reshape(-1,1)**3)),axis=1)
 feature_np = np.array(feature)
@@ -24,9 +25,9 @@ mean = feature_np.mean(0)
 std = feature_np.std(0)
 feature_np = (feature_np-mean)/std
 
-train_result = np.loadtxt('Y_train')
-test_data = pd.read_csv('X_test')
-test_raw = pd.read_csv('test.csv')
+train_result = np.loadtxt(sys.argv[4])
+test_data = pd.read_csv(sys.argv[5])
+test_raw = pd.read_csv(sys.argv[2])
 test_add = np.array(test_raw.iloc[:,4])
 test_add = np.concatenate((test_add.reshape(-1,1)**2,(test_add.reshape(-1,1))**3),axis=1)
 test_np = np.array(test_data)
@@ -75,7 +76,7 @@ for i in range(len(feature_np)):
         if (train_result[i]==0):
             counter = counter+1
 
-print ('accuracy on training: ', counter/len(feature_np))
+print ('accuracy on training set: ', counter/len(feature_np))
 
 prediction = np.array([0]*len(test_np))
 p = sigmoid(np.dot(test_np,w)+b)
@@ -86,7 +87,7 @@ for j in range(len(test_np)):
     else:
         prediction[j] = 0
 
-of = open('prediction.csv','w')
+of = open(sys.argv[6],'w')
 out = 'id,label\n'
 for k in range(len(prediction)):
     out = out + str(k+1) + ',' + str(prediction[k]) + '\n'

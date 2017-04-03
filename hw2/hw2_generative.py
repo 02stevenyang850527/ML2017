@@ -1,17 +1,18 @@
 import pandas as pd
 import numpy as np
+import sys
 
 #-------read data--------
-feature = pd.read_csv('X_train')
+feature = pd.read_csv(sys.argv[3])
 #feature_selected = feature[['age','fnlwgt','capital_gain','capital_loss','hours_per_week']]
 feature_selected = feature
 feature_np = np.array(feature_selected)
 mean = feature_np.mean(0)
 std = feature_np.std(0)
 feature_np = (feature_np-mean)/std
-train_result = np.loadtxt('Y_train')
+train_result = np.loadtxt(sys.argv[4])
 
-test_data = pd.read_csv('X_test')
+test_data = pd.read_csv(sys.argv[5])
 #test_selected = test_data[['age','fnlwgt','capital_gain','capital_loss','hours_per_week']]
 test_selected = test_data
 test_np = np.array(test_selected)
@@ -75,7 +76,7 @@ for i in range(len(test_np)):
         prediction[i]=0
 
 print (counter)
-of = open('prediction.csv','w')
+of = open(sys.argv[6],'w')
 out = 'id,label\n'
 for k in range(len(prediction)):
     out = out + str(k+1) + ',' + str(prediction[k]) + '\n'
