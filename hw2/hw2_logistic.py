@@ -46,7 +46,7 @@ w = np.array([0.0]*feature_np.shape[1])
 lr = 0.5
 b_lr = 0.0
 w_lr = np.array([0.0]*feature_np.shape[1])
-lamda = 0  # For Regularization
+lamda = 5  # For Regularization
 iteration = 2000
 
 for i in range(iteration):
@@ -59,12 +59,12 @@ for i in range(iteration):
     b = b - lr/np.sqrt(b_lr)*b_grad
     w = w - lr/np.sqrt(w_lr)*w_grad
     # print cross entropy
-    if (i%100 == 1):
+'''    if (i%100 == 1):
         z = np.dot(feature_np,w)+b
         y = sigmoid(z)
         cross_entropy = -(np.dot(train_result,np.log(y)) + np.dot(1-train_result,np.log(1-y)))
         print ('iteration: {}, cross_entropy = {}'.format(i,cross_entropy))
-
+'''
 #--------- test ----------
 counter = 0
 p_train = sigmoid(np.dot(feature_np,w)+b)
@@ -94,5 +94,3 @@ for k in range(len(prediction)):
 
 of.write(out)
 of.close()
-
-
