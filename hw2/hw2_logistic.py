@@ -46,7 +46,7 @@ w = np.array([0.0]*feature_np.shape[1])
 lr = 0.5
 b_lr = 0.0
 w_lr = np.array([0.0]*feature_np.shape[1])
-lamda = 5  # For Regularization
+lamda = 0  # For Regularization
 iteration = 2000
 
 for i in range(iteration):
