@@ -31,23 +31,38 @@ train_label = np_utils.to_categorical(train_label,num_classes)
 
 #-------- CNN ------------
 model = Sequential()
-model.add(Convolution2D(43,(5,5),input_shape=(48,48,1)))
-model.add(MaxPooling2D(3,3))
-model.add(Convolution2D(80,(5,5)))
-model.add(MaxPooling2D(3,3))
-model.add(Flatten())
-model.add(Dense(200))
+model.add(Convolution2D(32,(3,3),input_shape=(48,48,1)))
 model.add(Activation('relu'))
+model.add(MaxPooling2D(2,2))
+model.add(Dropout(0.25))
+
+model.add(Convolution2D(32,(3,3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(2,2))
+model.add(Dropout(0.25))
+
+model.add(Convolution2D(128,(3,3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(2,2))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dropout(0.4))
+
 model.add(Dense(num_classes))
 model.add(Activation('softmax'))
 model.summary()
 
-model.compile(loss='categorical_crossentropy', optimizer='adam',metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer='adamax',metrics=['accuracy'])
 
 #model.fit(train_feature, train_label, validation_data=(valid_feature, valid_label), batch_size=30,epochs=10)
-model.fit(train_feature, train_label, validation_split = 0.2, batch_size=30,epochs=10)
+model.fit(train_feature, train_label, validation_split = 0.2, batch_size=64,epochs=35)
 
-score = model.evaluate(train_feature,train_label,batch_size=10000)
+print ('fit')
+score = model.evaluate(train_feature,train_label)
 print ('Train Acc: ', score[1])
 
 model.save('my_model.h5')
+print ('saved')
