@@ -18,6 +18,14 @@ train_feature = np.array(train_feature, dtype=float)
 train_feature = train_feature/255
 train_label = np.array(train['label'])
 
+#-------read test.csv------------
+test  = pd.read_csv('test.csv')
+test_feature = test.feature.str.split(' ')
+test_feature = test_feature.tolist()
+test_feature = np.array(test_feature, dtype=float)
+test_feature = test_feature/255
+test_feature = test_feature.reshape(test_feature.shape[0],48,48,1)
+
 #--------training & validation data--------
 valid_num = 5000
 valid_feature = train_feature[:valid_num]
@@ -41,12 +49,12 @@ model.add(Dropout(0.25))
 model.add(Convolution2D(128,(3,3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(2,2))
-model.add(Dropout(0.25))
+model.add(Dropout(0.3))
 
 model.add(Convolution2D(256,(3,3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(2,2))
-model.add(Dropout(0.3))
+model.add(Dropout(0.4))
 
 model.add(Flatten())
 model.add(Dense(1024))
@@ -75,16 +83,39 @@ datagen = ImageDataGenerator(
 
 datagen.fit(train_feature)
 
-batch = 64
-for i in range(4):
+batch = 128
+bound = 0.9
+model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=5)
+prob = model.predict(test_feature)
+label = prob.argmax(1)
+decision = prob.max(1) > bound
+label = label[decision]
+feature = test_feature[decision,:,:,:]
+test_feature = np.delete(test_feature,decision,0)
+train_feature = np.concatenate((train_feature,feature),axis=0)
+label = np_utils.to_categorical(label,num_classes)
+train_label = np.concatenate((train_label, label), axis=0)
+
+for i in range(5):
     model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=6)
     model.fit_generator(datagen.flow(train_feature,train_label,batch_size=batch),
                         steps_per_epoch = train_feature.shape[0]/batch,
-                        epochs = 4,
+                        epochs=4,
                         validation_data = (valid_feature, valid_label)
                        )
+    if (len(test_feature)):
+        prob = model.predict(test_feature)
+        label = prob.argmax(1)
+        decision = prob.max(1) > bound
+        label = label[decision]
+        feature = test_feature[decision,:,:,:]
+        test_feature = np.delete(test_feature,decision,0)
+        train_feature = np.concatenate((train_feature,feature),axis=0)
+        label = np_utils.to_categorical(label,num_classes)
+        train_label = np.concatenate((train_label, label), axis=0)
+
 
 score = model.evaluate(train_feature,train_label)
-print ('\nTrain Acc: ', score[1])
 
-model.save('my_model_2.h5')
+print ('\nTrain Acc: ', score[1])
+model.save('my_model_1.h5')
