@@ -3,9 +3,10 @@ import numpy as np
 from keras.models import Sequential, load_model
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers import Convolution2D, MaxPooling2D, Flatten
+from keras.layers.normalization import BatchNormalization
 from keras.optimizers import SGD, Adam
 from keras.utils import np_utils
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, CSVLogger
 from keras.preprocessing.image import ImageDataGenerator
 
 
@@ -19,12 +20,13 @@ train_feature = train_feature/255
 train_label = np.array(train['label'])
 
 #-------read test.csv------------
+'''
 test  = pd.read_csv('test.csv')
 test_feature = test.feature.str.split(' ')
 test_feature = test_feature.tolist()
 test_feature = np.array(test_feature, dtype=float)
 test_feature = test_feature/255
-test_feature = test_feature.reshape(test_feature.shape[0],48,48,1)
+test_feature = test_feature.reshape(test_feature.shape[0],48,48,1)'''
 
 #--------training & validation data--------
 valid_num = 5000
@@ -41,25 +43,41 @@ valid_label = np_utils.to_categorical(valid_label,num_classes)
 
 #-------- CNN ------------
 model = Sequential()
-model.add(Convolution2D(64,(3,3),input_shape=(48,48,1)))
+model.add(Convolution2D(128,(3,3),input_shape=(48,48,1),padding='same'))
 model.add(Activation('relu'))
-model.add(MaxPooling2D(2,2))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(2,2,padding='same'))
 model.add(Dropout(0.25))
 
-model.add(Convolution2D(128,(3,3)))
+model.add(Convolution2D(128,(3,3),padding='same'))
 model.add(Activation('relu'))
-model.add(MaxPooling2D(2,2))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(2,2,padding='same'))
 model.add(Dropout(0.3))
 
-model.add(Convolution2D(256,(3,3)))
+model.add(Convolution2D(256,(3,3),padding='same'))
 model.add(Activation('relu'))
-model.add(MaxPooling2D(2,2))
-model.add(Dropout(0.4))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(2,2,padding='same'))
+model.add(Dropout(0.3))
+
+model.add(Convolution2D(256,(3,3),padding='same'))
+model.add(Activation('relu'))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(2,2,padding='same'))
+model.add(Dropout(0.3))
 
 model.add(Flatten())
-model.add(Dense(1024))
+model.add(Dense(256))
 model.add(Activation('relu'))
-model.add(Dropout(0.5))
+model.add(BatchNormalization())
+model.add(Dropout(0.4))
+
+
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(BatchNormalization())
+model.add(Dropout(0.4))
 
 model.add(Dense(num_classes))
 model.add(Activation('softmax'))
@@ -75,7 +93,7 @@ datagen = ImageDataGenerator(
         featurewise_std_normalization=False,    # divide inputs by std of the dataset
         samplewise_std_normalization=False,     # divide each input by its std
         zca_whitening=False,                    # apply ZCA whitening
-        rotation_range=3,                       # randomly rotate images in the range (degrees, 0 to 180)
+        rotation_range=10,                       # randomly rotate images in the range (degrees, 0 to 180)
         width_shift_range=0.1,                  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,                 # randomly shift images vertically (fraction of total height)
         horizontal_flip=True,                   # randomly flip images
@@ -84,6 +102,7 @@ datagen = ImageDataGenerator(
 datagen.fit(train_feature)
 
 batch = 128
+'''
 bound = 0.9
 model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=5)
 prob = model.predict(test_feature)
@@ -94,13 +113,24 @@ feature = test_feature[decision,:,:,:]
 test_feature = np.delete(test_feature,decision,0)
 train_feature = np.concatenate((train_feature,feature),axis=0)
 label = np_utils.to_categorical(label,num_classes)
-train_label = np.concatenate((train_label, label), axis=0)
+train_label = np.concatenate((train_label, label), axis=0)'''
 
-for i in range(5):
-    model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=6)
+csv_logger = CSVLogger('training.log')
+model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=5,callbacks=[csv_logger])
+model.fit_generator(datagen.flow(train_feature,train_label,batch_size=batch),
+                    steps_per_epoch = train_feature.shape[0]/batch,
+                    epochs=100,
+                    validation_data = (valid_feature, valid_label),
+                    callbacks = [csv_logger]
+                   )
+model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=10,callbacks=[csv_logger])
+
+'''
+for i in range(6):
+    model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=5)
     model.fit_generator(datagen.flow(train_feature,train_label,batch_size=batch),
                         steps_per_epoch = train_feature.shape[0]/batch,
-                        epochs=4,
+                        epochs=5,
                         validation_data = (valid_feature, valid_label)
                        )
     if (len(test_feature)):
@@ -112,10 +142,11 @@ for i in range(5):
         test_feature = np.delete(test_feature,decision,0)
         train_feature = np.concatenate((train_feature,feature),axis=0)
         label = np_utils.to_categorical(label,num_classes)
-        train_label = np.concatenate((train_label, label), axis=0)
+        train_label = np.concatenate((train_label, label), axis=0)'''
 
 
+#model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=10)
 score = model.evaluate(train_feature,train_label)
 
 print ('\nTrain Acc: ', score[1])
-model.save('my_model_1.h5')
+model.save('my_model.h5')
