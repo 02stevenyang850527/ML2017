@@ -115,15 +115,12 @@ train_feature = np.concatenate((train_feature,feature),axis=0)
 label = np_utils.to_categorical(label,num_classes)
 train_label = np.concatenate((train_label, label), axis=0)'''
 
-csv_logger = CSVLogger('training.log')
-model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=5,callbacks=[csv_logger])
+model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=5)
 model.fit_generator(datagen.flow(train_feature,train_label,batch_size=batch),
                     steps_per_epoch = train_feature.shape[0]/batch,
                     epochs=100,
                     validation_data = (valid_feature, valid_label),
-                    callbacks = [csv_logger]
                    )
-model.fit(train_feature, train_label,validation_data=(valid_feature,valid_label), batch_size=batch,epochs=10,callbacks=[csv_logger])
 
 '''
 for i in range(6):
