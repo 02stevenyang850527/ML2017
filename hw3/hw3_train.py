@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import sys
 from keras.models import Sequential, load_model
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers import Convolution2D, MaxPooling2D, Flatten
@@ -12,7 +13,7 @@ from keras.preprocessing.image import ImageDataGenerator
 
 num_classes = 7
 #--------read train.csv---------
-train = pd.read_csv('train.csv')
+train = pd.read_csv(sys.argv[1])
 train_feature = train.feature.str.split(' ')
 train_feature = train_feature.tolist()
 train_feature = np.array(train_feature, dtype=float)

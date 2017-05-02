@@ -28,7 +28,7 @@ def main():
     num_steps = NUM_STEPS
     nb_filter = 112
 
-    name_ls = ['activation_1']
+    name_ls = ['activation_2']
     collect_layers = [ layer_dict[name].output for name in name_ls ]
 
     for cnt, c in enumerate(collect_layers):
@@ -37,7 +37,7 @@ def main():
             input_img_data = np.random.random((1, 48, 48, 1)) # random noise
             target = K.mean(c[:, :, :, filter_idx])
             grads = normalize(K.gradients(target, input_img)[0])
-            iterate = K.function([input_img], [target, grads])
+            iterate = K.function([input_img,K.learning_phase()], [target, grads])
 
             ###
             "You need to implement it."
@@ -54,7 +54,7 @@ def main():
                 plt.xlabel('{:.3f}'.format(filter_imgs[it][i][1]))
                 plt.tight_layout()
             fig.suptitle('Filters of layer {} (# Ascent Epoch {} )'.format(name_ls[cnt], it*RECORD_FREQ))
-            fig.savefig('./filter/e'+ str(it))
+            fig.savefig('e'+ str(it) + '_act2')
 
 if __name__ == "__main__":
     main()

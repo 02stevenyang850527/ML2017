@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import sys
 import pandas as pd
 from keras.models import load_model
 from keras import backend as K
@@ -12,7 +13,7 @@ input_img = emotion_classifier.input
 name_ls = ['activation_1', 'activation_2','activation_3','activation_4']
 collect_layers = [ K.function([input_img, K.learning_phase()], [layer_dict[name].output]) for name in name_ls ]
 
-train = pd.read_csv('train.csv')
+train = pd.read_csv(sys.argv[1])
 train_feature = train.feature.str.split(' ')
 train_feature = train_feature.tolist()
 private_pixels = np.array(train_feature, dtype=float)
@@ -34,5 +35,6 @@ for cnt, fn in enumerate(collect_layers):
         plt.yticks(np.array([]))
         plt.tight_layout()
     fig.suptitle('Output of layer{} (Given image{})'.format(cnt, choose_id))
-    fig.savefig(('./output_layer/layer'+str(cnt)))
+    #fig.savefig(('./output_layer/layer'+str(cnt)))
+    fig.savefig(('layer'+str(cnt)))
 

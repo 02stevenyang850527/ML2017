@@ -1,8 +1,7 @@
-import os
-import sys
 import numpy as np
 import pandas as pd
 import itertools
+import sys
 from sklearn.metrics import confusion_matrix
 from keras.models import load_model
 import matplotlib.pyplot as plt
@@ -10,7 +9,7 @@ import matplotlib.pyplot as plt
 
 def plot_confusion_matrix(cm, classes,
                           title='Confusion matrix',
-                          cmap=plt.cm.jet):
+                          cmap=plt.cm.coolwarm):
     """
     This function prints and plots the confusion matrix.
     """
@@ -31,7 +30,7 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted label')
 
 model = load_model('my_model.h5')
-train = pd.read_csv('train.csv')
+train = pd.read_csv(sys.argv[1])
 train_feature = train.feature.str.split(' ')
 train_feature = train_feature.tolist()
 train_feature = np.array(train_feature, dtype=float)
