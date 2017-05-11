@@ -32,7 +32,7 @@ U, s, V = np.linalg.svd(pic_ctr, full_matrices=False)
 sel = 9
 eig_face = V[:sel,:]
 
-fig1 = plt.figure(figsize=(12,6))
+fig1 = plt.figure(figsize=(12,9))
 for i in range(sel):
     ax = fig1.add_subplot(sel/3, 3, i+1)
     ax.imshow(eig_face[i,:].reshape(64,64), cmap='gray')
@@ -76,7 +76,7 @@ for i in k_candi:
     w = np.dot(pic_ctr,V[:i,:].transpose())
     e_face = np.dot(w,V[:i,:]) + pic_mean
     err = est_error(e_face)
-    print('k: {}; err: {}'.format(i,err))
+    print('k: {}; err: {}'.format(i+1,err))
     if (err < 0.01):
-        print('Error below 0.01, and k is ',i)
+        print('Error below 0.01, and k is ',i+1)
         break
