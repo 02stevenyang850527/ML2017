@@ -61,4 +61,3 @@ for i, label in enumerate(vocabs):
 
 adjust_text(texts, arrowprops=dict(arrowstyle='-', color='k', lw=0.5))
 plt.show()
-a=1
