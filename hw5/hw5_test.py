@@ -8,8 +8,8 @@ from sklearn.metrics import matthews_corrcoef
 import keras.backend as K
 from sklearn.externals import joblib
 
-test_path = 'sys.argv[1]'    #test_data.csv
-output_path = 'sys.argv[2]'
+test_path = sys.argv[1]    #test_data.csv
+output_path = sys.argv[2]
 
 def f1_measure(y_true,y_pred):
     thresh = 0.4
