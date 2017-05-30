@@ -1,30 +1,39 @@
 import pandas as pd
+from numpy.linalg import inv
 import numpy as np
 
 train_path = 'train.csv'
 test_path = 'test.csv'
-output_path = 'ans.csv'
+output_path = 'ans_bias.csv'
 
-def matrix_factorization(R, P, Q, K, steps=701, lr=0.00001,beta=0.02):
-    bias = np.zeros(R.shape)
+def matrix_factorization(R, P, Q, K, steps=701, lr=0.1,beta=2):
+    #bias = np.zeros(R.shape)
+    #alpha_b = np.zeros(R.shape)
+    alpha_p = 0
+    alpha_q = 0
     Q = Q.T
     for _ in range(steps):
         indice = np.where(R == 0)
-        error = np.dot(P,Q) + bias -R
+        #error = np.dot(P,Q) + bias -R
+        error = np.dot(P,Q) - R
         error[indice] = 0
         eva = np.sqrt((error**2).sum()/(R!=0).sum())
         if (_%10 == 0):
             print ('iteration:{}, loss:{}'.format(_,eva))
         p_grad = 2*np.dot(error,Q.T)
         q_grad = 2*np.dot(P.T,error)
-        b_grad = 2*error
-        P -= lr*(p_grad-beta*P)
-        Q -= lr*(q_grad-beta*Q)
-        bias -= lr*(b_grad)
+        alpha_p += np.diag(np.dot(p_grad,p_grad.T)).mean()
+        alpha_q += np.diag(np.dot(q_grad.T,q_grad)).mean()
+        #alpha_b += ((2*error)**2).mean()
+
+        P -= lr/np.sqrt(alpha_p)*(p_grad-beta*P)
+        Q -= lr/np.sqrt(alpha_q)*(q_grad-beta*Q)
+        #B -= lr*(2*error-beta*B)
+        '''
         if (eva < 0.85):
             print ('itrration break:',_)
             break;
-
+        '''
     return (P,Q.T)
 
 
@@ -41,12 +50,13 @@ y[row,col] = ratings['Rating'].values
 
 np.random.seed(5)
 (M,N) = y.shape
-K = 5
+K = 10
 print(M,N)
 
 P = np.random.rand(M,K)
 Q = np.random.rand(N,K)
-nP, nQ = matrix_factorization(y, P, Q, K)
+#B = np.random.rand(M,N) # user preference & item preference
+nP, nQ= matrix_factorization(y, P, Q, K)
 
 pred = np.dot(nP,nQ.T)
 
