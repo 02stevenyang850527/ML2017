@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 import keras
 import keras.backend as K
-from keras.layers import Input, Flatten, Embedding, Dropout, Concatenate, Dot, Add, Dense
+from keras.layers import Input, Flatten, Embedding, Dropout, Concatenate, Dot, Add, Dense, LSTM, GRU, Conv1D, SimpleRNN
 from keras.layers.normalization import BatchNormalization
+from keras.layers.wrappers import Bidirectional
+from keras.layers.advanced_activations import LeakyReLU
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 
@@ -21,10 +23,10 @@ def get_model(n_users, n_items, latent_dim = 10):
     user_bias = Flatten()(user_bias)
     item_bias = Embedding(n_items, 1,embeddings_initializer='zeros')(item_input)
     item_bias = Flatten()(item_bias)
-    r_hat = Dot(axes=1)([user_vec,item_bias])
+    r_hat = Dot(axes=1)([user_vec,item_vec])
     r_hat = Add()([r_hat, user_bias, item_bias])
     model = keras.models.Model([user_input, item_input], r_hat)
-    model.compile(loss='mse', optimizer='sgd',metrics=[rmse])
+    model.compile(loss='mse', optimizer='adam',metrics=[rmse])
     return model
     
 
@@ -32,11 +34,14 @@ def nn_model(n_users, n_items,latent_dim=100):
     user_input = Input(shape=[1])
     item_input = Input(shape=[1])
     user_vec = Embedding(n_users, latent_dim, embeddings_initializer='random_normal')(user_input)
-    user_vec = Flatten()(user_vec)
+    #user_vec = Flatten()(user_vec)
     item_vec = Embedding(n_items, latent_dim, embeddings_initializer='random_normal')(item_input)
-    item_vec = Flatten()(item_vec)
+    #item_vec = Flatten()(item_vec)
     merge_vec = Concatenate()([user_vec, item_vec])
-    hidden = Dense(150, activation='relu')(merge_vec)
+    #hidden = Bidirectional(SimpleRNN(256, activation='tanh', dropout=0.3, recurrent_dropout=0.3)(merge_vec))
+    hidden = SimpleRNN(180, activation='tanh', dropout=0.3)(merge_vec)
+    
+    hidden = Dense(150, activation='relu')(hidden)
     hidden = BatchNormalization()(hidden)
     hidden = Dropout(0.3)(hidden)
     hidden = Dense(50, activation='relu')(hidden)
@@ -44,7 +49,7 @@ def nn_model(n_users, n_items,latent_dim=100):
     hidden = Dropout(0.3)(hidden)
     output = Dense(1)(hidden)
     model  = keras.models.Model([user_input, item_input], output)
-    model.compile(loss='mse', optimizer='adam',metrics=[rmse])
+    model.compile(loss='mse', optimizer='adamax',metrics=[rmse])
     model.summary()
     return model
 
@@ -97,12 +102,14 @@ std  = Y.std()
 Y = (Y-mean)/std
 '''
 (user_train, movie_train,Y_train),(user_val,movie_val,Y_val) = split_data(movie,user,Y)
-model = nn_model(n_users, n_movie,100)
-earlystopping = EarlyStopping(monitor='val_rmse', patience = 10, verbose=1, mode='max')
+model = nn_model(n_users, n_movie,50)
+earlystopping = EarlyStopping(monitor='val_rmse', patience = 5, verbose=1, mode='min')
 checkpoint = ModelCheckpoint(filepath='best.h5',
                              verbose=1,
+                             save_best_only=True,
                              monitor='val_rmse',
-                             mode='max')
+                             mode='min')
 
-model.fit([user_train, movie_train],Y_train,epochs=400, batch_size=128, validation_data=([user_val,movie_val],Y_val),callbacks=[earlystopping,checkpoint])
+model.fit([user_train, movie_train],Y_train,epochs=400, batch_size=512, validation_data=([user_val,movie_val],Y_val),callbacks=[earlystopping,checkpoint])
 
+model.save('mf.h5')
