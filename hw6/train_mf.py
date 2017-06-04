@@ -4,27 +4,33 @@ import keras
 import keras.backend as K
 from keras.layers import Input, Flatten, Embedding, Dropout, Concatenate, Dot, Add, Dense
 from keras.layers.normalization import BatchNormalization
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.regularizers import l2, l1, l1_l2
+from keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger
 
 
 def rmse(y_true,y_pred):
     return K.sqrt(K.mean((y_pred - y_true)**2))
 
-def get_model(n_users, n_items, latent_dim = 10):
+def get_model(n_users, n_items, latent_dim = 10):   # 5, 10, 15
     user_input = Input(shape=[1])
     item_input = Input(shape=[1])
-    user_vec = Embedding(n_users, latent_dim, embeddings_initializer='random_normal')(user_input)
+    user_vec = Embedding(n_users, latent_dim, embeddings_initializer='random_normal', embeddings_regularizer=l2(0.000001))(user_input)
     user_vec = Flatten()(user_vec)
-    item_vec = Embedding(n_items, latent_dim, embeddings_initializer='random_normal')(item_input)
+    user_vec = Dropout(0.1)(user_vec)
+
+    item_vec = Embedding(n_items, latent_dim, embeddings_initializer='random_normal', embeddings_regularizer=l2(0.000001))(item_input)
     item_vec = Flatten()(item_vec)
-    user_bias = Embedding(n_users, 1,embeddings_initializer='zeros')(user_input)
+    item_vec = Dropout(0.1)(item_vec)
+
+    user_bias = Embedding(n_users, 1,embeddings_initializer='zeros', embeddings_regularizer=l2(0.000001))(user_input)
     user_bias = Flatten()(user_bias)
-    item_bias = Embedding(n_items, 1,embeddings_initializer='zeros')(item_input)
+    item_bias = Embedding(n_items, 1,embeddings_initializer='zeros', embeddings_regularizer=l2(0.000001))(item_input)
     item_bias = Flatten()(item_bias)
     r_hat = Dot(axes=1)([user_vec,item_vec])
     r_hat = Add()([r_hat, user_bias, item_bias])
     model = keras.models.Model([user_input, item_input], r_hat)
-    model.compile(loss='mse', optimizer='adam',metrics=[rmse])
+    model.compile(loss = rmse, optimizer='adam',metrics=[rmse])
+    model.summary()
     return model
     
 
@@ -93,13 +99,22 @@ movie = ratings['MovieID'].values
 Y = ratings['Rating'].values
 '''
 mean = Y.mean()
+np.save('mean',mean)
 std  = Y.std()
+np.save('std',std)
 Y = (Y-mean)/std
 '''
 (user_train, movie_train,Y_train),(user_val,movie_val,Y_val) = split_data(movie,user,Y)
-model = get_model(n_users, n_movie,10)
-earlystopping = EarlyStopping(monitor='val_rmse', patience = 10, verbose=1, mode='max')
+model = get_model(n_users, n_movie)
+csv_logger = CSVLogger('training_log.csv',append=True)
+earlystopping = EarlyStopping(monitor='val_rmse', patience = 5, verbose=1, mode='min')
+checkpoint = ModelCheckpoint(filepath='mf_d2.h5',
+                             verbose=1,
+                             save_best_only=True,
+                             monitor='val_rmse',
+                             mode='min')
 
-model.fit([user_train, movie_train],Y_train,epochs=400, batch_size=128, validation_data=([user_val,movie_val],Y_val),callbacks=[earlystopping])
+model.fit([user_train, movie_train],Y_train,epochs=400, batch_size=128,
+          validation_data=([user_val,movie_val],Y_val),
+          callbacks=[earlystopping,checkpoint,csv_logger])
 
-model.save('mf.h5')

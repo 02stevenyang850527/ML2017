@@ -16,7 +16,7 @@ test = pd.read_csv(test_path)
 user = test['UserID'].values
 movie = test['MovieID'].values
 
-model = load_model('best.h5', custom_objects={'rmse':rmse})
+model = load_model('mf.h5', custom_objects={'rmse':rmse})
 result = model.predict([user, movie], batch_size=128, verbose=1)
 result = result.reshape(len(result))
 
