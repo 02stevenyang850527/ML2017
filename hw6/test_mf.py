@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import sys
 from keras.models import load_model
 import keras.backend as K
 
@@ -8,8 +9,8 @@ def rmse(y_true,y_pred):
     return K.sqrt(K.mean((y_pred - y_true)**2))
 
 
-test_path = 'test.csv'
-output_path = 'ans_mf.csv'
+test_path = sys.argv[1] + 'test.csv'
+output_path = sys.argv[2]
 
 test = pd.read_csv(test_path)
 
