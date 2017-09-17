@@ -1,2 +1,2 @@
 # ML2017
-XDD
+Machine Learning, 2017 Spring, NTU
