@@ -1,5 +1,5 @@
 # ML2017
-Machine Learning, 2017 Spring, NTU
+EE 5184, Machine Learning, 2017 Spring, National Taiwan University (NTU)
 
 + HW1: *Predict PM2.5* using linear regression.
 + HW2: *Predict income* using logistic regression.
